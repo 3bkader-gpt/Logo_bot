@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import logging.handlers
 import os
 import io
@@ -560,7 +561,7 @@ async def block_unlisted(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 # الدالة الرئيسية
-def main():
+async def main():
     clean_tmp_folder()
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler('start', start))
@@ -584,7 +585,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_save))
     app.add_handler(MessageHandler(filters.ALL, block_unlisted))
     logger.info("🚀 البوت شغال!")
-    app.run_polling()
+    await app.run_polling()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
