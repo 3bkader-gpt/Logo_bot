@@ -184,7 +184,7 @@ async def set_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if user_id_str not in user_settings:
                 user_settings[user_id_str] = {}
             user_settings[user_id_str]['custom_logo_size'] = percentage / 100
-            save_user_settings(user_settings]
+            save_user_settings(user_settings)
             await update.message.reply_text(
                 f"تم ضبط حجم اللوجو على {percentage}%.\n"
                 "استخدم /status لمراجعة إعداداتك."
