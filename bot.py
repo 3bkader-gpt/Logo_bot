@@ -311,7 +311,7 @@ async def handle_opacity_choice(update: Update, context: ContextTypes.DEFAULT_TY
         bw, bh = sample_image.size
         lw = int(bw * 0.2)
         bh = int(lw * logo.height / logo.width)
-        logo_resized = logo.resize((lw, lh), Image.Resampling.LANCZOS))
+        logo_resized = logo.resize((lw, lh), Image.Resampling.LANCZOS)
         mask = logo_resized.split()[3].point(lambda i: i * opacity_map[opacity_choice])
         layer = Image.new('RGBA', sample_image.size, (0, 0, 0, 0))
         position = (bw - lw - 10, bh - lh - 10)
