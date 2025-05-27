@@ -8,9 +8,10 @@ web = Flask(__name__)
 def home():
     return "OK"
 
-def run_web():
-    web.run(host="0.0.0.0", port=8000)
+def run_bot():
+    import asyncio
+    asyncio.run(main())
 
 if __name__ == '__main__':
-    Thread(target=main).start()
-    run_web()
+    Thread(target=web.run, kwargs={'host': '0.0.0.0', 'port': 8000}).start()
+    run_bot()
