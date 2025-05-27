@@ -243,7 +243,7 @@ async def clear_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in OWNERS:
         return
     allowed_users.clear()
-    save_allowed_users(allowed_users")
+    save_allowed_users(allowed_users)
     await update.message.reply_text("تم حذف كل المستخدمين المصرح لهم.")
 
 # دالة معالجة اختيار الحجم
