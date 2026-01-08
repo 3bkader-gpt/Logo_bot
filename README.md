@@ -12,7 +12,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.3.2-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Flask](https://img.shields.io/badge/Flask-3.0.3-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)](https://github.com/3bkader-gpt/Logo_bot)
 
@@ -45,7 +45,7 @@
 - 🔄 **Reset Functionality** - Reset logo to original version anytime
 - 🚀 **Koyeb Ready** - Optimized for cloud deployment
 - 📊 **Status Monitoring** - Check bot status and current settings
-- 🔐 **Secure** - Owner-only logo management
+- 🔐 **Secure** - Environment variables for sensitive data
 
 ---
 
@@ -80,7 +80,7 @@
 ![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Telegram Bot API](https://img.shields.io/badge/-Telegram%20Bot%20API-2CA5E0?style=flat-square&logo=telegram&logoColor=white)
 ![Flask](https://img.shields.io/badge/-Flask-000000?style=flat-square&logo=flask&logoColor=white)
-![Pillow](https://img.shields.io/badge/-Pillow-10.0.0-FF6B6B?style=flat-square&logo=python&logoColor=white)
+![Pillow](https://img.shields.io/badge/-Pillow-10.4.0-FF6B6B?style=flat-square&logo=python&logoColor=white)
 ![nest_asyncio](https://img.shields.io/badge/-nest_asyncio-1.6.0-4ECDC4?style=flat-square&logo=python&logoColor=white)
 
 </div>
@@ -106,8 +106,9 @@ cd Logo_bot
 # 2️⃣ Install dependencies
 pip install -r requirements.txt
 
-# 3️⃣ Set up environment variable
-export BOT_TOKEN="your_telegram_bot_token"
+# 3️⃣ Set up environment variables
+cp .env.example .env
+# Edit .env file with your BOT_TOKEN
 
 # 4️⃣ Run the bot
 python main.py
@@ -117,13 +118,17 @@ python main.py
 
 ## ⚙️ Configuration
 
-### **Environment Variables**
+### **Environment Variables Setup**
 
-Create a `.env` file or set environment variables:
+1. **Copy the example file:**
+```bash
+cp .env.example .env
+```
 
+2. **Edit `.env` file:**
 ```env
 BOT_TOKEN=your_telegram_bot_token_here
-KOYEB=1  # Set to 1 if deploying on Koyeb
+KOYEB=0  # Set to 1 when deploying on Koyeb
 ```
 
 ### **Telegram Bot Setup**
@@ -133,9 +138,9 @@ KOYEB=1  # Set to 1 if deploying on Koyeb
    - Use `/newbot` command
    - Copy the bot token
 
-2. **Set Token:**
-   ```bash
-   export BOT_TOKEN="your_bot_token_here"
+2. **Add to `.env`:**
+   ```env
+   BOT_TOKEN=your_bot_token_here
    ```
 
 ### **Owner Configuration**
@@ -145,6 +150,8 @@ Edit `bot.py` to set your Telegram user ID:
 ```python
 OWNERS = [1372068902, 6788399763]  # Add your user ID here
 ```
+
+To get your user ID, message [@userinfobot](https://t.me/userinfobot) on Telegram.
 
 ---
 
@@ -184,6 +191,8 @@ Logo_bot/
 ├── 📄 main.py                # Entry point with Flask server
 ├── 📄 requirements.txt       # Python dependencies
 ├── 📄 .python-version        # Python version specification
+├── 📄 .env.example           # Environment variables template
+├── 📄 .gitignore             # Git ignore file
 ├── 📖 README.md              # This file
 ├── 📁 tmp/                   # Temporary image storage (auto-created)
 ├── 📄 logo_original.png      # Original logo (created when set)
@@ -200,7 +209,7 @@ Logo_bot/
 
 The bot is optimized for Koyeb deployment:
 
-1. **Set Environment Variables:**
+1. **Set Environment Variables in Koyeb:**
    ```env
    BOT_TOKEN=your_bot_token
    KOYEB=1
@@ -218,15 +227,25 @@ The bot is optimized for Koyeb deployment:
 ### **Local Deployment**
 
 ```bash
+# Set environment variable
+export BOT_TOKEN="your_bot_token"
+
 # Run without Koyeb mode
 python main.py
 ```
 
-### **Docker (Coming Soon)**
+### **Using .env File**
 
 ```bash
-docker build -t logo-bot .
-docker run -e BOT_TOKEN=your_token logo-bot
+# Install python-dotenv (optional, for .env file support)
+pip install python-dotenv
+
+# Create .env file
+cp .env.example .env
+# Edit .env with your token
+
+# Run
+python main.py
 ```
 
 ---
@@ -267,11 +286,20 @@ docker run -e BOT_TOKEN=your_token logo-bot
 
 ### **Best Practices**
 
-- ✅ Environment variables for sensitive data
+- ✅ Environment variables for sensitive data (BOT_TOKEN)
 - ✅ User authentication system
 - ✅ File size limits
 - ✅ Input validation
 - ✅ Error handling and logging
+- ✅ `.gitignore` to prevent committing secrets
+
+### **Security Checklist**
+
+- [ ] Never commit `.env` file
+- [ ] Use strong bot token
+- [ ] Regularly update dependencies
+- [ ] Monitor logs for suspicious activity
+- [ ] Keep owner IDs secure
 
 ---
 
