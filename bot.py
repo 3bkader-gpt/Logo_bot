@@ -1,16 +1,18 @@
 import logging
 import asyncio
+import nest_asyncio
+nest_asyncio.apply()
 import logging.handlers
 import os
 import io
 import time
 import json
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters, CallbackQueryHandler
 from PIL import Image
 
 # Bot token
-TOKEN = '8020071366:AAG13ndNoW0uzbDoumJuBCWoYKQs3Lqs4_o'
+TOKEN = os.getenv('BOT_TOKEN')
 
 # الإعدادات
 LOGO_ORIGINAL = 'logo_original.png'
@@ -53,7 +55,7 @@ if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)
 
 # تنظيف الصور المؤقتة الأقدم من 24 ساعة
-def clean_tmp_folder():
+def clean_tmp_folder() -> None:
     now = time.time()
     for filename in os.listdir(TMP_DIR):
         file_path = os.path.join(TMP_DIR, filename)
@@ -65,39 +67,39 @@ def clean_tmp_folder():
                 logger.error(f"خطأ أثناء حذف {file_path}: {e}")
 
 # تحميل وحفظ المستخدمين المصرح لهم
-def load_allowed_users():
+def load_allowed_users() -> list:
     if os.path.exists('users.json'):
         with open('users.json', 'r') as f:
             return json.load(f)
     return []
 
-def save_allowed_users(users):
+def save_allowed_users(users: list) -> None:
     with open('users.json', 'w') as f:
         json.dump(users, f)
 
 allowed_users = load_allowed_users()
 
 # تحميل وحفظ إعدادات المستخدمين
-def load_user_settings():
+def load_user_settings() -> dict:
     if os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, 'r') as f:
             return json.load(f)
     return {}
 
-def save_user_settings(settings):
+def save_user_settings(settings: dict) -> None:
     with open(SETTINGS_FILE, 'w') as f:
         json.dump(settings, f)
 
 user_settings = load_user_settings()
 
 # دالة الواجهة الرئيسية
-async def return_to_main_menu(chat_id, context: ContextTypes.DEFAULT_TYPE):
+async def return_to_main_menu(chat_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [['Set Logo', 'Reset Logo'], ['Watermark', 'Help'], ['/status', '/config size', '/config opacity']]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await context.bot.send_message(chat_id=chat_id, text="رجعنا للواجهة الرئيسية.", reply_markup=reply_markup)
 
 # دالة البداية
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         await update.message.reply_text("أنت غير مصرح لك باستخدام هذا البوت.")
@@ -117,7 +119,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, reply_markup=reply_markup)
 
 # دالة المساعدة
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -135,7 +137,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # دالة الحالة
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -154,7 +156,7 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status_text)
 
 # دالة ضبط الحجم (خيارات)
-async def config_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def config_size(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -164,7 +166,7 @@ async def config_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.chat_data['configuring_size'] = True
 
 # دالة ضبط الشفافية
-async def config_opacity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def config_opacity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -174,7 +176,7 @@ async def config_opacity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.chat_data['configuring_opacity'] = True
 
 # دالة ضبط الحجم كنسبة مئوية
-async def set_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_size(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -196,7 +198,7 @@ async def set_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("استخدم الأمر بالشكل الصحيح: /setsize <نسبة> (مثال: /setsize 25)")
 
 # أوامر إدارة المستخدمين
-async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
@@ -211,7 +213,7 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except (IndexError, ValueError):
         await update.message.reply_text("استخدم الأمر بالشكل الصحيح: /adduser <id>")
 
-async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
@@ -226,7 +228,7 @@ async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except (IndexError, ValueError):
         await update.message.reply_text("استخدم الأمر بالشكل الصحيح: /removeuser <id>")
 
-async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
@@ -236,7 +238,7 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("لا يوجد مستخدمين مصرح لهم حاليًا.")
 
-async def clear_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def clear_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
@@ -245,7 +247,7 @@ async def clear_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("تم حذف كل المستخدمين المصرح لهم.")
 
 # دالة معالجة اختيار الحجم
-async def handle_size_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_size_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -287,7 +289,7 @@ async def handle_size_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await return_to_main_menu(update.message.chat_id, context)
 
 # دالة معالجة اختيار الشفافية
-async def handle_opacity_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_opacity_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -300,7 +302,7 @@ async def handle_opacity_choice(update: Update, context: ContextTypes.DEFAULT_TY
         return
     context.chat_data.pop('configuring_opacity')
     if not os.path.exists(LOGO_CURRENT) and not os.path.exists(LOGO_ORIGINAL):
-        await update.message.reply_text("مافيش لوجو محفوظ. استخدم Set Logo الأول.")
+        await update.message.reply_text("مافيش لوجو محافظ. استخدم Set Logo الأول.")
         return
     try:
         logo_path = LOGO_CURRENT if os.path.exists(LOGO_CURRENT) else LOGO_ORIGINAL
@@ -323,14 +325,14 @@ async def handle_opacity_choice(update: Update, context: ContextTypes.DEFAULT_TY
              InlineKeyboardButton("إلغاء", callback_data="cancel_opacity")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_photo(photo=out_buffer.getvalue(), caption="معاينة الشفافية:", reply_markup=reply_markup)
+        await update.message.reply_photo(out_buffer.getvalue(), caption="معاينة الشفافية:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"❌ خطأ أثناء معاينة الشفافية: {e}")
         await update.message.reply_text("حصل خطأ. جرب تاني.")
         await return_to_main_menu(update.message.chat_id, context)
 
 # دالة حفظ الإعدادات
-async def handle_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
     data = query.data
@@ -349,7 +351,7 @@ async def handle_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_settings[user_id_str] = {}
             user_settings[user_id_str]['custom_logo_scale'] = size_map[size_choice]
             save_user_settings(user_settings)
-            await query.edit_message_caption(caption="✅ تم حفظ الحجم!")
+            await query.edit_message_caption(caption="✓ تم حفظ الحجم!")
         elif data.startswith("save_opacity_"):
             opacity_choice = data.split("_")[2]
             opacity_map = {'منخفضة': 0.3, 'متوسطة': 0.5, 'عالية': 0.8, 'غير شفافة': 1.0}
@@ -357,7 +359,7 @@ async def handle_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_settings[user_id_str] = {}
             user_settings[user_id_str]['opacity'] = opacity_map[opacity_choice]
             save_user_settings(user_settings)
-            await query.edit_message_caption(caption="✅ تم حفظ الشفافية!")
+            await query.edit_message_caption(caption="✓ تم حفظ الشفافية!")
         elif data in ["cancel_size", "cancel_opacity"]:
             await query.edit_message_caption(caption="تم الإلغاء.")
         await return_to_main_menu(query.message.chat_id, context)
@@ -367,7 +369,7 @@ async def handle_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await return_to_main_menu(query.message.chat_id, context)
 
 # دالة تعيين اللوجو
-async def set_logo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_logo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
@@ -375,21 +377,21 @@ async def set_logo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.chat_data['setting_logo'] = True
 
 # دالة إعادة تعيين اللوجو
-async def reset_logo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def reset_logo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS:
         return
     if os.path.exists(LOGO_ORIGINAL):
         if os.path.exists(LOGO_CURRENT):
             os.remove(LOGO_CURRENT)
-        await update.message.reply_text("✅ تم إعادة تعيين اللوجو!", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("✓ تم إعادة تعيين اللوجو!", reply_markup=ReplyKeyboardRemove())
         await return_to_main_menu(update.message.chat_id, context)
     else:
         await update.message.reply_text("مافيش لوجو أصلي محفوظ.", reply_markup=ReplyKeyboardRemove())
         await return_to_main_menu(update.message.chat_id, context)
 
 # دالة طلب الصورة لإضافة اللوجو
-async def watermark_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def watermark_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
@@ -397,7 +399,7 @@ async def watermark_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.chat_data['waiting_for_photo'] = True
 
 # دالة استقبال الصور أو الملفات
-async def receive_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def receive_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.message
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
@@ -422,7 +424,7 @@ async def receive_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if os.path.exists(LOGO_CURRENT):
                 os.remove(LOGO_CURRENT)
             context.chat_data.pop('setting_logo')
-            await message.reply_text("✅ تم حفظ اللوجو!", reply_markup=ReplyKeyboardRemove())
+            await message.reply_text("✓ تم حفظ اللوجو!", reply_markup=ReplyKeyboardRemove())
             await return_to_main_menu(message.chat_id, context)
         except Exception as e:
             logger.error(f"❌ خطأ أثناء حفظ اللوجو: {str(e)}")
@@ -472,7 +474,7 @@ async def receive_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await return_to_main_menu(message.chat_id, context)
 
 # دالة اختيار النمط
-async def style_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def style_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat.id
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
@@ -526,7 +528,7 @@ async def style_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             positions = [(10, 10), (bw - lw - 10, 10), (10, bh - lh - 10), (bw - lw - 10, bh - lh - 10)]
 
         mask = logo_resized.split()[3].point(lambda i: i * opacity)
-        layer = Image.new('RGBA', base.size, (0, 0, 0, 0))
+        layer = Image.new('RGBA', base.size, (0, 0, 255, 0))
         if choice != '4':
             layer.paste(logo_resized, position, mask)
         else:
@@ -536,12 +538,12 @@ async def style_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         out_buffer = io.BytesIO()
         result.convert('RGB').save(out_buffer, format='JPEG', quality=95)
         out_buffer.seek(0)
-        await context.bot.send_photo(chat_id=chat_id, photo=out_buffer, caption="✅ تم إضافة اللوجو!")
+        await context.bot.send_photo(chat_id=chat_id, photo=out_buffer, caption="✓ تم إضافة اللوجو!")
         if os.path.exists(photo_path):
             os.remove(photo_path)
         del context.chat_data['photo_path']
         del context.chat_data['photo_time']
-        await context.bot.send_message(chat_id=chat_id, text="✅ تم المعالجة!", reply_markup=ReplyKeyboardRemove())
+        await context.bot.send_message(chat_id=chat_id, text="✓ تم المعالجة!", reply_markup=ReplyKeyboardRemove())
         await return_to_main_menu(chat_id, context)
     except Exception as e:
         logger.error(f"❌ خطأ أثناء المعالجة: {str(e)}")
@@ -555,15 +557,17 @@ async def style_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await return_to_main_menu(chat_id, context)
 
 # دالة تجاهل غير المصرح لهم
-async def block_unlisted(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def block_unlisted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     if user_id not in OWNERS and user_id not in allowed_users:
         return
 
 # الدالة الرئيسية
-async def main():
+async def main(local: bool = False) -> None:
     clean_tmp_folder()
     app = ApplicationBuilder().token(TOKEN).build()
+
+    # Command handlers
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('status', status))
@@ -572,20 +576,34 @@ async def main():
     app.add_handler(CommandHandler('adduser', add_user))
     app.add_handler(CommandHandler('removeuser', remove_user))
     app.add_handler(CommandHandler('clearusers', clear_users))
+
+    # Keyboard-style handlers
     app.add_handler(MessageHandler(filters.Regex('^/config size$'), config_size))
     app.add_handler(MessageHandler(filters.Regex('^/config opacity$'), config_opacity))
-    app.add_handler(MessageHandler(filters.Regex('^Help$'), help_command))
-    app.add_handler(MessageHandler(filters.Regex('^Set Logo$'), set_logo))
-    app.add_handler(MessageHandler(filters.Regex('^Reset Logo$'), reset_logo))
-    app.add_handler(MessageHandler(filters.Regex('^Watermark$'), watermark_command))
-    app.add_handler(MessageHandler(filters.PHOTO | filters.Document.IMAGE, receive_photo))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex('^Help$'), help_command))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex('^help$'), help_command))
+
+    app.add_handler(MessageHandler(filters.Regex('Set Logo'), set_logo))
+    app.add_handler(MessageHandler(filters.Regex('Reset Logo'), reset_logo))
+    app.add_handler(MessageHandler(filters.Regex('Watermark'), watermark_command))
+
+    # Photo / document handler
+    app.add_handler(
+        MessageHandler(
+            filters.PHOTO | filters.Document.IMAGE,
+            receive_photo
+        )
+    )
+
+    # Remaining style handlers
     app.add_handler(MessageHandler(filters.Regex('^(صغير|متوسط|كبير)$'), handle_size_choice))
     app.add_handler(MessageHandler(filters.Regex('^(منخفضة|متوسطة|عالية|غير شفافة)$'), handle_opacity_choice))
     app.add_handler(MessageHandler(filters.Regex('^(1️⃣ ركن أسفل يمين|2️⃣ منتصف اليمين|3️⃣ ركن أعلى اليسار|4️⃣ أربع أركان)$'), style_choice))
     app.add_handler(CallbackQueryHandler(handle_save))
     app.add_handler(MessageHandler(filters.ALL, block_unlisted))
-    logger.info("🚀 البوت شغال!")
-    await app.run_polling()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    logger.info("🚗 البوت شغال!")
+    if local:
+        await app.run_polling(close_loop=False, stop_signals=None)
+    else:
+        await app.run_polling()
